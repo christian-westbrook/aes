@@ -188,4 +188,34 @@ public class AESMethods2
 	{
 		return null;
 	}
+	
+	public static void main(String[] args)
+	{
+		// Unit test for keyAddition()
+		String text = "0000000000000000"; 			// '0' = 48 base 10 = 00110000 base 2
+		String key  = "aaaaaaaaaaaaaaaa"; 			// 'a' = 97 base 10 = 01100001 base 2
+													// ----------------------------------- GF(2) Addition
+													// 'Q' = 81 base 10 = 01010001 base 2
+							
+		System.out.println("Unit Test: keyAddition()");
+		System.out.println(keyAddition(text, key) + "\n");
+		
+		// Unit test for byteSubstitution
+		text = "PPPPPPPPPPPPPPPP";					// 'P' = 80 base 10 = 50 base 16
+													// ------------------------------- ByteSubstitution
+													// 'S' = 83 base 10 = 53 base 16
+													
+		System.out.println("Unit Test: byteSubstitution()");
+		System.out.println(byteSubstitution(text) + "\n");
+		
+		// Unit test for shiftRows()
+		text = "ABCDEFGHIJKLMNOP";					// ABCDEFGHIJKLMNOP
+													// -------------------------------- ShiftRows
+													// AFKPEJODINCHMBGL
+													
+		System.out.println("Unit Test: shiftRows()");
+		System.out.println(shiftRows(text));
+		
+		
+	}
 }

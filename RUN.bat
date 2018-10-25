@@ -1,0 +1,2 @@
+javac AESMethods2.java
+java AESMethods2
