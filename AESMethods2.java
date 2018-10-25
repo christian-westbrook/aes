@@ -194,21 +194,22 @@ public class AESMethods2
 		
 		// Create new data by multiplying each column with a constant matrix
 		
-		byte[][] matrix = {{2, 3, 1, 1},
+		byte[][] newCols = new byte[4][4];  // New path matrix
+		
+		byte[][] matrix = {{2, 3, 1, 1},	// Constant matrix
 						   {1, 2, 3, 1},
 						   {1, 1, 2, 3},
 		                   {3, 1, 1, 2}};
-						   
-		byte[][] newCols = new byte[4][4];
 	
-		for(int i = 0; i < 4; i++)
+		for(int i = 0; i < 4; i++)			// Loop through each column to be mixed
 		{
-			byte[] col    = cols[i];     // Input
-			byte[] newCol = new byte[4]; // Output
+			byte[] col    = cols[i];     	// Input column
+			byte[] newCol = new byte[4]; 	// Output column
+			
 			
 			for(int j = 0; j < 4; j++)
 			{
-				newCol[j] = ((byte) col[0] * matrix[j][0]) + ((byte) col[1] * matrix[j][1]) + ((byte) col[2] * matrix[j][2]) + ((byte) col[3] * matrix[j][3]);
+				newCol[j] = (byte) (col[0] * matrix[j][0] + col[1] * matrix[j][1] + col[2] * matrix[j][2] + col[3] * matrix[j][3]);
 			}
 			
 			newCols[i] = newCol;
