@@ -173,6 +173,47 @@ public class AESMethods2
 	//====================================================================
 	public String mixColumns(String text)
 	{
+		// Confirm that the input data path is of valid block size.
+		if(text.length() != 16)
+		{
+			System.out.println("[Error] Invalid block size input to mixColumns(). Halting execution.");
+			System.exit(1);
+		}
+		
+		// Convert textual data to numerical data that can be operated on mathematically
+		byte[] textBytes = text.getBytes();
+		
+		// Divide the input data into four columns for matrix multiplication
+		byte[] first  = {textBytes[0], textBytes[1], textBytes[2], textBytes[3]};
+		byte[] second = {textBytes[4], textBytes[5], textBytes[6], textBytes[7]};
+		byte[] third  = {textBytes[8], textBytes[9], textBytes[10], textBytes[11]};
+		byte[] fourth = {textBytes[12], textBytes[13], textBytes[14], textBytes[15]};
+		
+		// Combine the columns into a 2D byte array
+		byte[][] cols = {first, second, third, fourth};
+		
+		// Create new data by multiplying each column with a constant matrix
+		
+		byte[][] matrix = {{2, 3, 1, 1},
+						   {1, 2, 3, 1},
+						   {1, 1, 2, 3},
+		                   {3, 1, 1, 2}};
+						   
+		byte[][] newCols = new byte[4][4];
+	
+		for(int i = 0; i < 4; i++)
+		{
+			byte[] col    = cols[i];     // Input
+			byte[] newCol = new byte[4]; // Output
+			
+			for(int j = 0; j < 4; j++)
+			{
+				newCol[j] = ((byte) col[0] * matrix[j][0]) + ((byte) col[1] * matrix[j][1]) + ((byte) col[2] * matrix[j][2]) + ((byte) col[3] * matrix[j][3]);
+			}
+			
+			newCols[i] = newCol;
+		}
+		
 		return null;
 	}
 	
@@ -216,6 +257,6 @@ public class AESMethods2
 		System.out.println("Unit Test: shiftRows()");
 		System.out.println(shiftRows(text));
 		
-		
+		// Unit test for mixColumns()				//
 	}
 }
