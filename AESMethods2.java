@@ -5,14 +5,13 @@
 //Programmer   : Christian Westbrook
 //Date Created : 9/22/2018
 //Last Updated : 9/26/2018
-//Abstract     : This class implements three layers of the Advanced Encryption Standard, namely
-//				 the KeyAddition, ByteSubstition, and ShiftRow layers.
+//Abstract     : This class implements five layers of the Advanced Encryption Standard, namely
+//				 the KeyAddition, ByteSubstitution, ShiftRows, MixColumns, and KeySchedule layers.
 //=================================================================================================
 
 public class AESMethods2
 {	
-	// ======================================================================== || PART 1 || ======
-	
+
 	//====================================================================
 	// Method	: keyAddition()
 	// Abstract : Adds the round subkey to the data path
@@ -164,19 +163,29 @@ public class AESMethods2
 		return new String(newChars);
 	}
 	
-	// ====================================================================== || END PART 1 || ====
-	
-	// ======================================================================== || PART 2 || ======
-	
+	//====================================================================
+	// Method	: mixColumns()
+	// Abstract : 
+	//
+	// Input	: Data path (String of 16 characters)
+	// Process	: 
+	// Output	: New data
+	//====================================================================
 	public String mixColumns(String text)
 	{
 		return null;
 	}
 	
+	//====================================================================
+	// Method	: keySchedule()
+	// Abstract : 
+	//
+	// Input	: 
+	// Process	: 
+	// Output	: 
+	//====================================================================
 	public String keySchedule(String key, int round)
 	{
 		return null;
 	}
-	
-	// ====================================================================== || END PART 2 || ====
 }
