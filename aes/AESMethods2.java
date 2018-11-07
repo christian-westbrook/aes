@@ -306,11 +306,11 @@ public class AESMethods2
 			System.out.print(p2Coefficients[i] + " ");
 		System.out.println();
 
-		System.out.printf("Poly rep. of %4d   : ", poly1);
+		System.out.printf("Poly rep. of   %4d :", poly1);
 		printPolyByCoeff(p1Coefficients);
 		System.out.println();
 
-		System.out.printf("Poly rep. of %4d   : ", poly2);
+		System.out.printf("Poly rep. of   %4d :", poly2);
 		printPolyByCoeff(p2Coefficients);
 		System.out.println();
 		// END TEST CODE
@@ -366,6 +366,11 @@ public class AESMethods2
 						default: System.out.println("[Error] Invalid polynomial coefficient in extFieldMultiply()."); System.exit(1); break;
 					}
 
+					// TEST CODE
+					System.out.println("\nOrder of term 1     : " + poly1Order);
+					System.out.println("Order of term 2     : " + poly2Order);
+					// END TEST CODE
+
 					// Computer the order of the new term
 					int newOrder = -1;
 
@@ -378,11 +383,23 @@ public class AESMethods2
 					else
 						newOrder = 0;
 
+					//TEST CODE
+					System.out.println("Order of result     : " + newOrder);
+					// END TEST CODE
+
 					// Store the new term in the cPrime array
-					cPrimeCoefficients[newOrder]++;
+					//((order + 1) * -1) + coefficients.length = i
+					int k = ((newOrder + 1) * -1) + cPrimeCoefficients.length;
+					cPrimeCoefficients[k]++;
 				}
 			}
 		}
+
+		// TEST CODE
+		System.out.print("Result before mod   : ");
+		printPolyByCoeff(cPrimeCoefficients);
+		System.out.println();
+		// END TEST CODE
 
 		// Reduce cPrime coefficients within the extension field GF(2)
 		for(int i = 0; i < 16; i++)
@@ -390,54 +407,59 @@ public class AESMethods2
 			cPrimeCoefficients[i] = cPrimeCoefficients[i] % 2;
 		}
 
+		// TEST CODE
+		System.out.print("Result after mod    : ");
+		printPolyByCoeff(cPrimeCoefficients);
+		System.out.println();
+		// END TEST CODE
+
 
 		// Compute C(x) as C'(x) divided by P(x) repreatedly until C(x) fits in
 		// the original extension field GF(2^8)
 		int[] pCoefficients = {1, 0, 0, 0, 1, 1, 0, 1, 1};	// P(x)
 		int[] c				= cPrimeCoefficients;			// Stores the final reduced polynomial
 
-		boolean fits = false;								// Checks if the polynomial fits in the
-															// original extension field
+		// TEST CODE
+		System.out.print("P(x)                : ");
+		printPolyByCoeff(pCoefficients);
+		System.out.println();
 
-		while(!fits)
+		System.out.print("C(x)                : ");
+		printPolyByCoeff(c);
+		System.out.println();
+		// END TEST CODE
+
+		while(!fits(c))
 		{
-			// Check to see if the polynomial C(x) fits in the original extension field
-			if(c[15] == 0 && c[14] == 0 && c[13] == 0 && c[12] == 0 && c[11] == 0
-			&& c[10] == 0 && c[9] == 0 && c[8] == 0)
+			// Reduce C(x) by P(x)
+
+			// Multiply P(x) so as to reduce the highest order term in C(x)
+			int shift = 7;
+			int index = 15;
+
+			while(c[index] != 1)
 			{
-				fits = true;
+				shift--;
+				index--;
 			}
-			else
+
+			int[] shiftedP = new int[pCoefficients.length + shift];
+
+			int j = 8;
+			for(int i = shiftedP.length - 1; i >= ((shiftedP.length - 1) - pCoefficients.length) + 1; i--)
 			{
-				// Reduce C(x) by P(x)
+				shiftedP[i] = pCoefficients[j];
+				j--;
+			}
 
-				// Multiply P(x) so as to reduce the highest order term in C(x)
-				int shift = 7;
-				int index = 15;
+			// Reduce C(x) by P(x)
 
-				while(c[index] != 1)
-				{
-					shift--;
-					index--;
-				}
-
-				int[] shiftedP = new int[pCoefficients.length + shift];
-
-				int j = 8;
-				for(int i = shiftedP.length - 1; i >= (shiftedP.length - 1) - pCoefficients.length; i--)
-				{
-					shiftedP[i] = pCoefficients[j];
-					j--;
-				}
-
-				// Reduce C(x) by P(x)
-
-				for(int i = 0; i < 16; i++)
-				{
-					c[i] = (c[i] + shiftedP[i]) % 2;
-				}
+			for(int i = 0; i < 16; i++)
+			{
+				c[i] = (c[i] + shiftedP[i]) % 2;
 			}
 		}
+
 
 		// Convert coefficient array to byte
 		byte output = 0;
@@ -465,10 +487,44 @@ public class AESMethods2
 	{
 		for(int i = 0; i < coefficients.length; i++)
 		{
-			if(coefficients[i] == 1)
+
+			// i = 0, order = 7
+			// i = 1, order = 6
+			// i = 2, order - 5
+			int order = ((i - coefficients.length) * -1) - 1;
+			// order + 1 = ((i - coefficients.length) * -1)
+			//(order + 1) * -1 = i - coefficients.length
+			//((order + 1) * -1) + coefficients.length = i
+
+			if(coefficients[i] > 0)
 			{
-				System.out.print(" + X^" + i);
+				System.out.print(" + " + coefficients[i] + "X^" + order);
 			}
+		}
+	}
+
+	/**
+	 *	Checks to see if the input coefficient vector represents a polynomial
+	 *	that fits in the extension field GF(2^8).
+	 *
+	 *	@param	coefficients		An integer array of coefficients representing a polynomial
+	 *	@return						A boolean value representing whether the polynomial represented by
+	 *								the input coefficient array fits in the extension field GF(2^8)
+	 */
+	public static boolean fits(int[] coefficients)
+	{
+		if(coefficients.length <= 8)
+			return true;
+		else
+		{
+			boolean fits = true;
+			for(int i = 8; i < coefficients.length; i++)
+			{
+				if(coefficients[i] > 0)
+					fits = false;
+			}
+
+			return fits;
 		}
 	}
 
@@ -522,5 +578,9 @@ public class AESMethods2
 			System.out.print((byte) output.charAt(i));
 		}
 		System.out.println();
+
+		// Unit test for printPolyByCoeff()
+		int[] test = {1, 1, 1, 1};
+		printPolyByCoeff(test);
 	}
 }
