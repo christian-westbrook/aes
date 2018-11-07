@@ -136,24 +136,47 @@ public class AESMethods2
 	}
 
 	/**
-	 *	Abstract
+	 *	Performs a linear transformation that mixes each column of
+	 *	the data matrix.
 	 *
 	 *	@param	text		Input data path (String of 16 characters)
 	 *	@return				New data path
 	 */
 	public static String mixColumns(String text)
 	{
+		// TEST CODE
+		System.out.println("Input data path     : " + text);
+		// END TEST CODE
+
 		// Confirm that the input data path is of valid block size.
 		validateDataPath(text, "mixColumns()");
 
+		// TEST CODE
+		System.out.println("Block size          : " + text.length());
+		// END TEST CODE
+
 		// Convert textual data to numerical data that can be operated on mathematically
 		byte[] textBytes = text.getBytes();
+
+		// TEST CODE
+		System.out.print("Byte representation : ");
+		for(int i = 0; i < textBytes.length; i++)
+			System.out.print(textBytes[i] + " ");
+		System.out.println();
+		// END TEST CODE
 
 		// Divide the input data into four columns for matrix multiplication
 		byte[] first  = {textBytes[0], textBytes[1], textBytes[2], textBytes[3]};
 		byte[] second = {textBytes[4], textBytes[5], textBytes[6], textBytes[7]};
 		byte[] third  = {textBytes[8], textBytes[9], textBytes[10], textBytes[11]};
 		byte[] fourth = {textBytes[12], textBytes[13], textBytes[14], textBytes[15]};
+
+		// TEST CODE
+		System.out.println("First Column        : " + first[0] + " " + first[1] + " " + first[2] + " " + first[3]);
+		System.out.println("Second Column       : " + second[0] + " " + second[1] + " " + second[2] + " " + second[3]);
+		System.out.println("Third Column        : " + third[0] + " " + third[1] + " " + third[2] + " " + third[3]);
+		System.out.println("Fourth Column       : " + fourth[0] + " " + fourth[1] + " " + fourth[2] + " " + fourth[3]);
+		// END TEST CODE
 
 		// Combine the columns into a 2D byte array
 		byte[][] cols = {first, second, third, fourth};
@@ -169,6 +192,10 @@ public class AESMethods2
 
 		for(int i = 0; i < 4; i++)			// Loop through each column to be mixed
 		{
+			// TEST CODE
+			System.out.println("\nMixing row " + i);
+			// END TEST CODE
+
 			byte[] inCol    = new byte[4];	// Input column
 			byte[] outCol  	= new byte[4]; 	// Output column
 
@@ -177,6 +204,10 @@ public class AESMethods2
 			{
 				inCol[j] = cols[i][j];
 			}
+
+			// TEST CODE
+			System.out.println("Input column        : " + inCol[0] + " " + inCol[1] + " " + inCol[2] + " " + inCol[3]);
+			// END TEST CODE
 
 			// Mix columns
 			outCol[i] = (byte) (extFieldMultiply(matrix[i][0], inCol[0]) ^ extFieldMultiply(matrix[i][1], inCol[1]) ^ extFieldMultiply(matrix[i][2], inCol[2]) ^ extFieldMultiply(matrix[i][3], inCol[3]));
@@ -214,7 +245,7 @@ public class AESMethods2
 	}
 
 	/**
-	 *	Abstract
+	 *	Validates the block size of the data path
 	 *
 	 *	@param	text	Text for validation
 	 *	@param	method	The name of the method calling this method
@@ -239,11 +270,20 @@ public class AESMethods2
 	public static byte extFieldMultiply(byte poly1, byte poly2)
 	{
 
+		// TEST CODE
+		System.out.println("\nMultiply " + poly1 + " by " + poly2);
+		// END TEST CODE
+
 		// Represent the coefficients of the polynomials as integers
 
 		// Convert the input bytes to String objects
 		String poly1Str = String.format("%8s", Integer.toBinaryString(poly1 & 0xFF)).replace(' ', '0');
 		String poly2Str = String.format("%8s", Integer.toBinaryString(poly2 & 0xFF)).replace(' ', '0');
+
+		// TEST CODE
+		System.out.printf("Binary rep. of %4d : " + poly1Str + "\n", poly1);
+		System.out.printf("Binary rep. of %4d : " + poly2Str + "\n", poly2);
+		// END TEST CODE
 
 		// Convert each character to an integer representation of polynomial term coefficients
 		int[] p1Coefficients = new int[8];
@@ -255,10 +295,34 @@ public class AESMethods2
 			p2Coefficients[i] = Character.getNumericValue(poly2Str.charAt(i));
 		}
 
+		// TEST CODE
+		System.out.printf("Coeff. rep. of %4d : ", poly1);
+		for(int i = 0; i < 8; i++)
+			System.out.print(p1Coefficients[i] + " ");
+		System.out.println();
+
+		System.out.printf("Coeff. rep. of %4d : ", poly2);
+		for(int i = 0; i < 8; i++)
+			System.out.print(p2Coefficients[i] + " ");
+		System.out.println();
+
+		System.out.printf("Poly rep. of %4d   : ", poly1);
+		printPolyByCoeff(p1Coefficients);
+		System.out.println();
+
+		System.out.printf("Poly rep. of %4d   : ", poly2);
+		printPolyByCoeff(p2Coefficients);
+		System.out.println();
+		// END TEST CODE
+
 		// Create an array to store the result of polynomial multiplication
 		int[] cPrimeCoefficients = new int[16];
 
 		// Multiply every term of poly1 with every term of poly2
+
+		// TEST CODE
+		System.out.println("Multiply terms");
+		// END TEST CODE
 
 		for(int i = 0; i < 8; i++)	// For every term of poly1
 		{
@@ -392,53 +456,71 @@ public class AESMethods2
 		return output;
 	}
 
+	/**
+	 *	Prints a polynomial from an input integer array of coefficients.
+	 *
+	 *	@param	@coefficients		An integer array of coefficients.
+	 */
+	public static void printPolyByCoeff(int[] coefficients)
+	{
+		for(int i = 0; i < coefficients.length; i++)
+		{
+			if(coefficients[i] == 1)
+			{
+				System.out.print(" + X^" + i);
+			}
+		}
+	}
+
 	public static void main(String[] args)
 	{
 		// Unit test for keyAddition()
+		System.out.println("Unit Test: keyAddition()");
+
 		String text = "0000000000000000"; // '0' = 48 base 10 = 00110000 base 2
 		String key  = "aaaaaaaaaaaaaaaa"; // 'a' = 97 base 10 = 01100001 base 2
 										  // ------------------- GF(2) Addition
 										  // 'Q' = 81 base 10 = 01010001 base 2
 
-		System.out.println("Unit Test: keyAddition()");
 		System.out.println(keyAddition(text, key) + "\n");
 
 		// Unit test for byteSubstitution
+		System.out.println("Unit Test: byteSubstitution()");
 		text = "PPPPPPPPPPPPPPPP";		// 'P' = 80 base 10 = 50 base 16
 										// ------------------- byteSubstitution
 										// 'S' = 83 base 10 = 53 base 16
 
-		System.out.println("Unit Test: byteSubstitution()");
 		System.out.println(byteSubstitution(text) + "\n");
 
 		// Unit test for shiftRows()
+		System.out.println("Unit Test: shiftRows()");
+
 		text = "ABCDEFGHIJKLMNOP";		// ABCDEFGHIJKLMNOP
 										// -------------------------- ShiftRows
 										// AFKPEJODINCHMBGL
 
-		System.out.println("Unit Test: shiftRows()");
 		System.out.println(shiftRows(text) + "\n");
 
 		// Unit test for mixColumns()	//
+		System.out.println("Unit Test: mixColumns()");
+
+		System.out.print("\nUnit Test Case      : ");
 		char[] chars = new char[16];
 		for(int i = 0; i < 16; i++)
 		{
 			chars[i] = 25;
+			System.out.print(chars[i]);
 		}
+		System.out.println();
 
-		System.out.println("Unit Test: mixColumns()");
 		String output = mixColumns(new String(chars));
+
+		System.out.print("\nOutput as bytes     : ");
 
 		for(int i = 0; i < 16; i++)
 		{
-			System.out.print((int) output.charAt(i));
+			System.out.print((byte) output.charAt(i));
 		}
 		System.out.println();
-		System.out.println();
-
-		System.out.println("Unit Test: extFieldMultiply()");
-		byte poly1 = 2;
-		byte poly2 = 25;
-		System.out.println(extFieldMultiply(poly1, poly2) + "\n");
 	}
 }
