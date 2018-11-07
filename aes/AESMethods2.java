@@ -11,6 +11,20 @@ package aes;
 
 public class AESMethods2
 {
+	/**
+	 *	Stores the round subkeys.
+	 */
+	public static String[] words;
+
+	/**
+	 *	Stores round constants used in the key schedule
+	 */
+	public static String[] rc;
+
+	public AESMethods2()
+	{
+		rc = {"01", "02", "04", "08", "10", "20", "40", "80", "1B", "36"};
+	}
 
 	/**
 	 *	Adds the round subkey to the input data path using addition in the
@@ -171,13 +185,6 @@ public class AESMethods2
 		byte[] third  = {textBytes[8], textBytes[9], textBytes[10], textBytes[11]};
 		byte[] fourth = {textBytes[12], textBytes[13], textBytes[14], textBytes[15]};
 
-		// TEST CODE
-		System.out.println("First Column        : " + first[0] + " " + first[1] + " " + first[2] + " " + first[3]);
-		System.out.println("Second Column       : " + second[0] + " " + second[1] + " " + second[2] + " " + second[3]);
-		System.out.println("Third Column        : " + third[0] + " " + third[1] + " " + third[2] + " " + third[3]);
-		System.out.println("Fourth Column       : " + fourth[0] + " " + fourth[1] + " " + fourth[2] + " " + fourth[3]);
-		// END TEST CODE
-
 		// Combine the columns into a 2D byte array
 		byte[][] cols = {first, second, third, fourth};
 
@@ -192,9 +199,6 @@ public class AESMethods2
 
 		for(int i = 0; i < 4; i++)			// Loop through each column to be mixed
 		{
-			// TEST CODE
-			System.out.println("\nMixing row " + i);
-			// END TEST CODE
 
 			byte[] inCol    = new byte[4];	// Input column
 			byte[] outCol  	= new byte[4]; 	// Output column
@@ -205,12 +209,9 @@ public class AESMethods2
 				inCol[j] = cols[i][j];
 			}
 
-			// TEST CODE
-			System.out.println("Input column        : " + inCol[0] + " " + inCol[1] + " " + inCol[2] + " " + inCol[3]);
-			// END TEST CODE
-
 			// Mix columns
-			outCol[i] = (byte) (extFieldMultiply(matrix[i][0], inCol[0]) ^ extFieldMultiply(matrix[i][1], inCol[1]) ^ extFieldMultiply(matrix[i][2], inCol[2]) ^ extFieldMultiply(matrix[i][3], inCol[3]));
+			for(int j = 0; j < 4; j++)
+				outCol[j] = (byte) (extFieldMultiply(matrix[i][0], inCol[0]) ^ extFieldMultiply(matrix[i][1], inCol[1]) ^ extFieldMultiply(matrix[i][2], inCol[2]) ^ extFieldMultiply(matrix[i][3], inCol[3]));
 
 			// Assign output column to output byte matrix
 			newCols[i] =  outCol;
@@ -237,11 +238,45 @@ public class AESMethods2
 	 *
 	 *	@param	key		Encryption key
 	 *	@param	round	The current round of AES being performed
-	 * 	@return			Null
+	 * 	@return			Round subkey
 	 */
-	public String keySchedule(String key, int round)
+	public static String keySchedule(String key, int round)
 	{
-		return null;
+		// Confirm that the input key is of valid block size
+		if(key.length() == 16)
+		{
+			words = new String[44];
+
+			// Load the first four words with the key
+			words[0] = new String(String.valueOf(key.charAt(0)) + String.valueOf(key.charAt(1)) + String.valueOf(key.charAt(2)) + String.valueOf(key.charAt(3)));
+			words[1] = new String(String.valueOf(key.charAt(4)) + String.valueOf(key.charAt(5)) + String.valueOf(key.charAt(6)) + String.valueOf(key.charAt(7)));
+			words[2] = new String(String.valueOf(key.charAt(8)) + String.valueOf(key.charAt(9)) + String.valueOf(key.charAt(10)) + String.valueOf(key.charAt(11)));
+			words[3] = new String(String.valueOf(key.charAt(12)) + String.valueOf(key.charAt(13)) + String.valueOf(key.charAt(14)) + String.valueOf(key.charAt(15)));
+		}
+		else if(key.length() == 24)
+		{
+			words = new String[52];
+		}
+		else if(key.length() == 32)
+		{
+			words = new String[60];
+		}
+		else
+		{
+			System.out.println("[Error] Invalid key block size. Halting execution.");
+			System.exit(1);
+		}
+	}
+
+	/**
+	 *	Nonlinear transformation for round subkeys
+	 *
+	 *	@param	inWord		Input word to be transformed
+	 *	@return				Transformed output word
+	 */
+	public static String g(String inWord)
+	{
+
 	}
 
 	/**
@@ -269,21 +304,11 @@ public class AESMethods2
 	 */
 	public static byte extFieldMultiply(byte poly1, byte poly2)
 	{
-
-		// TEST CODE
-		System.out.println("\nMultiply " + poly1 + " by " + poly2);
-		// END TEST CODE
-
 		// Represent the coefficients of the polynomials as integers
 
 		// Convert the input bytes to String objects
 		String poly1Str = String.format("%8s", Integer.toBinaryString(poly1 & 0xFF)).replace(' ', '0');
 		String poly2Str = String.format("%8s", Integer.toBinaryString(poly2 & 0xFF)).replace(' ', '0');
-
-		// TEST CODE
-		System.out.printf("Binary rep. of %4d : " + poly1Str + "\n", poly1);
-		System.out.printf("Binary rep. of %4d : " + poly2Str + "\n", poly2);
-		// END TEST CODE
 
 		// Convert each character to an integer representation of polynomial term coefficients
 		int[] p1Coefficients = new int[8];
@@ -295,34 +320,10 @@ public class AESMethods2
 			p2Coefficients[i] = Character.getNumericValue(poly2Str.charAt(i));
 		}
 
-		// TEST CODE
-		System.out.printf("Coeff. rep. of %4d : ", poly1);
-		for(int i = 0; i < 8; i++)
-			System.out.print(p1Coefficients[i] + " ");
-		System.out.println();
-
-		System.out.printf("Coeff. rep. of %4d : ", poly2);
-		for(int i = 0; i < 8; i++)
-			System.out.print(p2Coefficients[i] + " ");
-		System.out.println();
-
-		System.out.printf("Poly rep. of   %4d :", poly1);
-		printPolyByCoeff(p1Coefficients);
-		System.out.println();
-
-		System.out.printf("Poly rep. of   %4d :", poly2);
-		printPolyByCoeff(p2Coefficients);
-		System.out.println();
-		// END TEST CODE
-
 		// Create an array to store the result of polynomial multiplication
 		int[] cPrimeCoefficients = new int[16];
 
 		// Multiply every term of poly1 with every term of poly2
-
-		// TEST CODE
-		System.out.println("Multiply terms");
-		// END TEST CODE
 
 		for(int i = 0; i < 8; i++)	// For every term of poly1
 		{
@@ -366,11 +367,6 @@ public class AESMethods2
 						default: System.out.println("[Error] Invalid polynomial coefficient in extFieldMultiply()."); System.exit(1); break;
 					}
 
-					// TEST CODE
-					System.out.println("\nOrder of term 1     : " + poly1Order);
-					System.out.println("Order of term 2     : " + poly2Order);
-					// END TEST CODE
-
 					// Computer the order of the new term
 					int newOrder = -1;
 
@@ -383,10 +379,6 @@ public class AESMethods2
 					else
 						newOrder = 0;
 
-					//TEST CODE
-					System.out.println("Order of result     : " + newOrder);
-					// END TEST CODE
-
 					// Store the new term in the cPrime array
 					//((order + 1) * -1) + coefficients.length = i
 					int k = ((newOrder + 1) * -1) + cPrimeCoefficients.length;
@@ -395,39 +387,16 @@ public class AESMethods2
 			}
 		}
 
-		// TEST CODE
-		System.out.print("Result before mod   : ");
-		printPolyByCoeff(cPrimeCoefficients);
-		System.out.println();
-		// END TEST CODE
-
 		// Reduce cPrime coefficients within the extension field GF(2)
 		for(int i = 0; i < 16; i++)
 		{
 			cPrimeCoefficients[i] = cPrimeCoefficients[i] % 2;
 		}
 
-		// TEST CODE
-		System.out.print("Result after mod    : ");
-		printPolyByCoeff(cPrimeCoefficients);
-		System.out.println();
-		// END TEST CODE
-
-
 		// Compute C(x) as C'(x) divided by P(x) repreatedly until C(x) fits in
 		// the original extension field GF(2^8)
 		int[] pCoefficients = {1, 0, 0, 0, 1, 1, 0, 1, 1};	// P(x)
 		int[] c				= cPrimeCoefficients;			// Stores the final reduced polynomial
-
-		// TEST CODE
-		System.out.print("P(x)                : ");
-		printPolyByCoeff(pCoefficients);
-		System.out.println();
-
-		System.out.print("C(x)                : ");
-		printPolyByCoeff(c);
-		System.out.println();
-		// END TEST CODE
 
 		while(!fits(c))
 		{
@@ -460,18 +429,20 @@ public class AESMethods2
 			}
 		}
 
-
 		// Convert coefficient array to byte
 		byte output = 0;
 
-		for(int i = 0; i < c.length; i++)
+		for(int i = 8; i < 16; i++)
 		{
 			if(c[i] == 1)
 			{
-				if(i == 0)
+				if(i == 15)
 					output++;
 				else
-					output = (byte) (output + (i * 2));
+				{
+					int order = ((i - c.length) * -1) - 1;
+					output = (byte) (output + Math.pow(2.0, order));
+				}
 			}
 		}
 
@@ -481,7 +452,7 @@ public class AESMethods2
 	/**
 	 *	Prints a polynomial from an input integer array of coefficients.
 	 *
-	 *	@param	@coefficients		An integer array of coefficients.
+	 *	@param	coefficients		An integer array of coefficients.
 	 */
 	public static void printPolyByCoeff(int[] coefficients)
 	{
@@ -518,7 +489,7 @@ public class AESMethods2
 		else
 		{
 			boolean fits = true;
-			for(int i = 8; i < coefficients.length; i++)
+			for(int i = 0; i < (coefficients.length - 8); i++)
 			{
 				if(coefficients[i] > 0)
 					fits = false;
@@ -578,9 +549,5 @@ public class AESMethods2
 			System.out.print((byte) output.charAt(i));
 		}
 		System.out.println();
-
-		// Unit test for printPolyByCoeff()
-		int[] test = {1, 1, 1, 1};
-		printPolyByCoeff(test);
 	}
 }
