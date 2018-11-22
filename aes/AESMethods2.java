@@ -3,7 +3,9 @@ package aes;
 /**
  *	This class implements five layers of the Advanced Encryption Standard,
  *	namely the KeyAddition, ByteSubstitution, ShiftRows, MixColumns, and
- * 	KeySchedule layers.
+ * 	KeySchedule layers. A constraint of design is that all methods must
+ *	be statically accessible. As a result, certain work may be unecessarily
+ *	duplicated.
  *
  *	@author		Christian Westbrook
  *	@version	1.0
@@ -11,21 +13,6 @@ package aes;
 
 public class AESMethods2
 {
-	/**
-	 *	Stores the round subkeys.
-	 */
-	public static String[] words;
-
-	/**
-	 *	Stores round constants used in the key schedule
-	 */
-	public static String[] rc;
-
-	public AESMethods2()
-	{
-		rc = {"01", "02", "04", "08", "10", "20", "40", "80", "1B", "36"};
-	}
-
 	/**
 	 *	Adds the round subkey to the input data path using addition in the
 	 *	Galois field GF(2).
@@ -158,26 +145,11 @@ public class AESMethods2
 	 */
 	public static String mixColumns(String text)
 	{
-		// TEST CODE
-		System.out.println("Input data path     : " + text);
-		// END TEST CODE
-
 		// Confirm that the input data path is of valid block size.
 		validateDataPath(text, "mixColumns()");
 
-		// TEST CODE
-		System.out.println("Block size          : " + text.length());
-		// END TEST CODE
-
 		// Convert textual data to numerical data that can be operated on mathematically
 		byte[] textBytes = text.getBytes();
-
-		// TEST CODE
-		System.out.print("Byte representation : ");
-		for(int i = 0; i < textBytes.length; i++)
-			System.out.print(textBytes[i] + " ");
-		System.out.println();
-		// END TEST CODE
 
 		// Divide the input data into four columns for matrix multiplication
 		byte[] first  = {textBytes[0], textBytes[1], textBytes[2], textBytes[3]};
@@ -242,30 +214,241 @@ public class AESMethods2
 	 */
 	public static String keySchedule(String key, int round)
 	{
-		// Confirm that the input key is of valid block size
+		// This outer control structure confirms that the input key is of valid size
+
+		// Used to store 32 bit words that represent the input key and the
+		// generated round keys.
+		String[] W;
+
+		System.out.println(key.length());
+
+		// 128 bit key
 		if(key.length() == 16)
 		{
-			words = new String[44];
+			// Stores the original input key and 10 rounds of subkeys
+			W = new String[44];
 
-			// Load the first four words with the key
-			words[0] = new String(String.valueOf(key.charAt(0)) + String.valueOf(key.charAt(1)) + String.valueOf(key.charAt(2)) + String.valueOf(key.charAt(3)));
-			words[1] = new String(String.valueOf(key.charAt(4)) + String.valueOf(key.charAt(5)) + String.valueOf(key.charAt(6)) + String.valueOf(key.charAt(7)));
-			words[2] = new String(String.valueOf(key.charAt(8)) + String.valueOf(key.charAt(9)) + String.valueOf(key.charAt(10)) + String.valueOf(key.charAt(11)));
-			words[3] = new String(String.valueOf(key.charAt(12)) + String.valueOf(key.charAt(13)) + String.valueOf(key.charAt(14)) + String.valueOf(key.charAt(15)));
+			// Load the first four words with the input key
+			StringBuilder builder = new StringBuilder();
+			builder.append(key.charAt(0));
+			builder.append(key.charAt(1));
+			builder.append(key.charAt(2));
+			builder.append(key.charAt(3));
+			W[0] = builder.toString();
+
+			builder.setCharAt(0, key.charAt(4));
+			builder.setCharAt(1, key.charAt(5));
+			builder.setCharAt(2, key.charAt(6));
+			builder.setCharAt(3, key.charAt(7));
+			W[1] = builder.toString();
+
+			builder.setCharAt(0, key.charAt(8));
+			builder.setCharAt(1, key.charAt(9));
+			builder.setCharAt(2, key.charAt(10));
+			builder.setCharAt(3, key.charAt(11));
+			W[2] = builder.toString();
+
+			builder.setCharAt(0, key.charAt(12));
+			builder.setCharAt(1, key.charAt(13));
+			builder.setCharAt(2, key.charAt(14));
+			builder.setCharAt(3, key.charAt(15));
+			W[3] = builder.toString();
+
+			// Compute subkey
+			if(round == 0)
+			{
+				String subkey = W[0] + W[1] + W[2] + W[3];
+				return subkey;
+			}
+			else
+			{
+				for(int i = 1; i <= 10; i++)
+				{
+					W[4 * i] = addStrings(W[4 * (i - 1)], g(W[(4 * i) - 1], i));
+
+					for(int j = 1; j <= 3; j++)
+					{
+						W[(4 * i) + j] = addStrings(W[(4 * i) + (j - 1)], W[(4 * (i - 1)) + j]);
+					}
+				}
+			}
+
+			// Return subkey
+			return W[4 * round] + W[(4 * round) + 1] + W[(4 * round) + 2] + W[(4 * round) + 3];
 		}
+		// 192 bit key
 		else if(key.length() == 24)
 		{
-			words = new String[52];
+			// Stores the original input key and 12 rounds of subkeys
+			W = new String[52];
+
+			// Load the first six words with the input key
+			StringBuilder builder = new StringBuilder();
+			builder.append(key.charAt(0));
+			builder.append(key.charAt(1));
+			builder.append(key.charAt(2));
+			builder.append(key.charAt(3));
+			W[0] = builder.toString();
+
+			builder.setCharAt(0, key.charAt(4));
+			builder.setCharAt(1, key.charAt(5));
+			builder.setCharAt(2, key.charAt(6));
+			builder.setCharAt(3, key.charAt(7));
+			W[1] = builder.toString();
+
+			builder.setCharAt(0, key.charAt(8));
+			builder.setCharAt(1, key.charAt(9));
+			builder.setCharAt(2, key.charAt(10));
+			builder.setCharAt(3, key.charAt(11));
+			W[2] = builder.toString();
+
+			builder.setCharAt(0, key.charAt(12));
+			builder.setCharAt(1, key.charAt(13));
+			builder.setCharAt(2, key.charAt(14));
+			builder.setCharAt(3, key.charAt(15));
+			W[3] = builder.toString();
+
+			builder.setCharAt(0, key.charAt(16));
+			builder.setCharAt(1, key.charAt(17));
+			builder.setCharAt(2, key.charAt(18));
+			builder.setCharAt(3, key.charAt(19));
+			W[4] = builder.toString();
+
+			builder.setCharAt(0, key.charAt(20));
+			builder.setCharAt(1, key.charAt(21));
+			builder.setCharAt(2, key.charAt(22));
+			builder.setCharAt(3, key.charAt(23));
+			W[5] = builder.toString();
+
+			// Compute subkey
+			if(round == 0)
+			{
+				String subkey = W[0] + W[1] + W[2] + W[3];
+				return subkey;
+			}
+			else
+			{
+				for(int i = 1; i <= 8; i++)
+				{
+					W[6 * i] = addStrings(W[6 * (i - 1)], g(W[(6 * i) - 1], i));
+
+					for(int j = 1; j <= 5; j++)
+					{
+						W[(6 * i) + j] = addStrings(W[(6 * i) + (j - 1)], W[(6 * (i - 1)) + j]);
+					}
+				}
+			}
+
+			// Return subkey
+			return W[4 * round] + W[(4 * round) + 1] + W[(4 * round) + 2] + W[(4 * round) + 3];
 		}
+		// 256 bit key
 		else if(key.length() == 32)
 		{
-			words = new String[60];
+			// Stores the original input key and 14 rounds of subkeys
+			W = new String[60];
+
+			// Load the first eight words with the input key
+			StringBuilder builder = new StringBuilder();
+			builder.append(key.charAt(0));
+			builder.append(key.charAt(1));
+			builder.append(key.charAt(2));
+			builder.append(key.charAt(3));
+			W[0] = builder.toString();
+
+			builder.setCharAt(0, key.charAt(4));
+			builder.setCharAt(1, key.charAt(5));
+			builder.setCharAt(2, key.charAt(6));
+			builder.setCharAt(3, key.charAt(7));
+			W[1] = builder.toString();
+
+			builder.setCharAt(0, key.charAt(8));
+			builder.setCharAt(1, key.charAt(9));
+			builder.setCharAt(2, key.charAt(10));
+			builder.setCharAt(3, key.charAt(11));
+			W[2] = builder.toString();
+
+			builder.setCharAt(0, key.charAt(12));
+			builder.setCharAt(1, key.charAt(13));
+			builder.setCharAt(2, key.charAt(14));
+			builder.setCharAt(3, key.charAt(15));
+			W[3] = builder.toString();
+
+			builder.setCharAt(0, key.charAt(16));
+			builder.setCharAt(1, key.charAt(17));
+			builder.setCharAt(2, key.charAt(18));
+			builder.setCharAt(3, key.charAt(19));
+			W[4] = builder.toString();
+
+			builder.setCharAt(0, key.charAt(20));
+			builder.setCharAt(1, key.charAt(21));
+			builder.setCharAt(2, key.charAt(22));
+			builder.setCharAt(3, key.charAt(23));
+			W[5] = builder.toString();
+
+			builder.setCharAt(0, key.charAt(24));
+			builder.setCharAt(1, key.charAt(25));
+			builder.setCharAt(2, key.charAt(26));
+			builder.setCharAt(3, key.charAt(27));
+			W[6] = builder.toString();
+
+			builder.setCharAt(0, key.charAt(28));
+			builder.setCharAt(1, key.charAt(29));
+			builder.setCharAt(2, key.charAt(30));
+			builder.setCharAt(3, key.charAt(31));
+			W[7] = builder.toString();
+
+			// Compute subkey
+			if(round == 0)
+			{
+				String subkey = W[0] + W[1] + W[2] + W[3];
+				return subkey;
+			}
+			else
+			{
+				for(int i = 1; i <= 7; i++)
+				{
+					W[8 * i] = addStrings(W[8 * (i - 1)], g(W[(8 * i) - 1], i));
+
+					for(int j = 1; j <= 7; j++)
+					{
+						W[(8 * i) + j] = addStrings(W[(8 * i) + (j - 1)], W[(8 * (i - 1)) + j]);
+					}
+				}
+			}
+
+			// Return subkey
+			return W[4 * round] + W[(4 * round) + 1] + W[(4 * round) + 2] + W[(4 * round) + 3];
 		}
+		// Invalid key size
 		else
 		{
 			System.out.println("[Error] Invalid key block size. Halting execution.");
 			System.exit(1);
 		}
+
+		System.out.println("HERE!");
+		return null;
+	}
+
+	/**
+	 *	XORs two String objects together. Assumes that input Strings have a
+	 *	length of 4.
+	 */
+	public static String addStrings(String s1, String s2)
+	{
+		// Convert textual data to numerical data that can be operated on mathematically
+		byte[] s1Bytes = s1.getBytes();
+		byte[] s2Bytes = s2.getBytes();
+
+		byte[] output = new byte[4];
+
+		for(int i = 0; i < output.length; i++)
+		{
+			output[i] = (byte) (s1Bytes[i] ^ s2Bytes[i]);
+		}
+
+		return new String(output);
 	}
 
 	/**
@@ -274,9 +457,63 @@ public class AESMethods2
 	 *	@param	inWord		Input word to be transformed
 	 *	@return				Transformed output word
 	 */
-	public static String g(String inWord)
+	public static String g(String inWord, int index)
 	{
+		// Used to manipulate the input word efficiently
+		StringBuilder builder = new StringBuilder();
 
+		// S-box conversion table
+		String[][] sBox =  {{"63", "7C", "77", "7B", "F2", "6B", "6F", "C5", "30", "01", "67", "2B", "FE", "D7", "AB", "76"},
+							{"CA", "82", "C9", "7D", "FA", "59", "47", "F0", "AD", "D4", "A2", "AF", "9C", "A4", "72", "C0"},
+							{"B7", "FD", "93", "26", "36", "3F", "F7", "CC", "34", "A5", "E5", "F1", "71", "D8", "31", "15"},
+							{"04", "C7", "23", "C3", "18", "96", "05", "9A", "07", "12", "80", "E2", "EB", "27", "B2", "75"},
+							{"09", "83", "2C", "1A", "1B", "6E", "5A", "A0", "52", "3B", "D6", "B3", "29", "E3", "2F", "84"},
+							{"53", "D1", "00", "ED", "20", "FC", "B1", "5B", "6A", "CB", "BE", "39", "4A", "4C", "58", "CF"},
+							{"D0", "EF", "AA", "FB", "43", "4D", "33", "85", "45", "F9", "02", "7F", "50", "3C", "9F", "A8"},
+							{"51", "A3", "40", "8F", "92", "9D", "38", "F5", "BC", "B6", "DA", "21", "10", "FF", "F3", "D2"},
+							{"CD", "0C", "13", "EC", "5F", "97", "44", "17", "C4", "A7", "7E", "3D", "64", "5D", "19", "73"},
+							{"60", "81", "4F", "DC", "22", "2A", "90", "88", "46", "EE", "B8", "14", "DE", "5E", "0B", "DB"},
+							{"E0", "32", "3A", "0A", "49", "06", "24", "5C", "C2", "D3", "AC", "62", "91", "95", "E4", "79"},
+							{"E7", "C8", "37", "6D", "8D", "D5", "4E", "A9", "6C", "56", "F4", "EA", "65", "7A", "AE", "08"},
+							{"BA", "78", "25", "2E", "1C", "A6", "B4", "C6", "E8", "DD", "74", "1F", "4B", "BD", "8B", "8A"},
+							{"70", "3E", "B5", "66", "48", "03", "F6", "0E", "61", "35", "57", "B9", "86", "C1", "1D", "9E"},
+							{"E1", "F8", "98", "11", "69", "D9", "8E", "94", "9B", "1E", "87", "E9", "CE", "55", "28", "DF"},
+							{"8C", "A1", "89", "0D", "BF", "E6", "42", "68", "41", "99", "2D", "0F", "B0", "54", "BB", "16"}};
+
+		int[] roundCoefficients = {1, 2, 4, 8, 16, 32, 64, 128, 27, 54};
+
+		// Rotate bytes
+		builder.append(inWord.charAt(1));
+		builder.append(inWord.charAt(2));
+		builder.append(inWord.charAt(3));
+		builder.append(inWord.charAt(0));
+
+		// S-Box Byte Substitution
+		byte[] rotatedBytes = builder.toString().getBytes();
+
+		for(int i = 0; i < 4; i++)
+		{
+			String hexString = String.format("%02X ", rotatedBytes[i]);
+
+			int a = Character.digit(hexString.charAt(0), 16);
+			int b = Character.digit(hexString.charAt(1), 16);
+
+			String newHexString = sBox[a][b];
+
+			int c = Character.digit(newHexString.charAt(0), 16);
+			int d = Character.digit(newHexString.charAt(1), 16);
+			int e = (c * 16) + d;
+
+			builder.setCharAt(i, (char) e);
+		}
+
+		// Add round coefficient
+		byte[] output = builder.toString().getBytes();
+
+
+		output[0] = (byte) ((output[0] ^ roundCoefficients[index - 1]) % 128);
+
+		return new String(output);
 	}
 
 	/**
@@ -548,6 +785,20 @@ public class AESMethods2
 		{
 			System.out.print((byte) output.charAt(i));
 		}
+		System.out.println();
+
+		// Unit test for addStrings()
+		System.out.println("\n" + addStrings("0000", "aaaa")); // Should print QQQQ
+
+		// Unit test for keySchedule()
+		byte[] inBytes = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+		String inString = new String(inBytes);
+		String outString = keySchedule(inString, 2);
+		byte[] outBytes = outString.getBytes();
+
+		System.out.println();
+		for(int i = 0; i < outBytes.length; i++)
+			System.out.print(outBytes[i] + " ");
 		System.out.println();
 	}
 }
