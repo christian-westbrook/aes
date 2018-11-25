@@ -220,8 +220,6 @@ public class AESMethods2
 		// generated round keys.
 		String[] W;
 
-		System.out.println(key.length());
-
 		// 128 bit key
 		if(key.length() == 16)
 		{
@@ -441,6 +439,12 @@ public class AESMethods2
 		byte[] s1Bytes = s1.getBytes();
 		byte[] s2Bytes = s2.getBytes();
 
+		System.out.println("addStrings()");
+		System.out.print("s1     : ");
+		printByteArray(s1Bytes);
+		System.out.print("s2     : ");
+		printByteArray(s2Bytes);
+
 		byte[] output = new byte[4];
 
 		for(int i = 0; i < output.length; i++)
@@ -448,7 +452,33 @@ public class AESMethods2
 			output[i] = (byte) (s1Bytes[i] ^ s2Bytes[i]);
 		}
 
+		System.out.print("output : ");
+		printByteArray(output);
+		System.out.println();
+
 		return new String(output);
+	}
+
+	public static String addBytes(String b1Bytes, String b2Bytes)
+	{
+		System.out.println("addBytes()");
+		System.out.print("b1     : ");
+		printByteArray(b1Bytes);
+		System.out.print("b2     : ");
+		printByteArray(b2Bytes);
+
+		byte[] output = new byte[4];
+
+		for(int i = 0; i < output.length; i++)
+		{
+			output[i] = (byte) (s1Bytes[i] ^ s2Bytes[i]);
+		}
+
+		System.out.print("output : ");
+		printByteArray(output);
+		System.out.println();
+
+		return output;
 	}
 
 	/**
@@ -459,6 +489,10 @@ public class AESMethods2
 	 */
 	public static String g(String inWord, int index)
 	{
+		System.out.println("G");
+		System.out.print("Input byte     : ");
+		printByteArray(inWord.getBytes());
+
 		// Used to manipulate the input word efficiently
 		StringBuilder builder = new StringBuilder();
 
@@ -488,31 +522,46 @@ public class AESMethods2
 		builder.append(inWord.charAt(3));
 		builder.append(inWord.charAt(0));
 
+		System.out.print("After rotation : ");
+		printByteArray(builder.toString().getBytes());
+
 		// S-Box Byte Substitution
 		byte[] rotatedBytes = builder.toString().getBytes();
+
+		byte[] subbedBytes = new byte[4];
 
 		for(int i = 0; i < 4; i++)
 		{
 			String hexString = String.format("%02X ", rotatedBytes[i]);
+			System.out.println("In Hex String  : " + hexString);
 
 			int a = Character.digit(hexString.charAt(0), 16);
 			int b = Character.digit(hexString.charAt(1), 16);
 
 			String newHexString = sBox[a][b];
 
+			System.out.println("Out Hex String : " + newHexString);
+
 			int c = Character.digit(newHexString.charAt(0), 16);
 			int d = Character.digit(newHexString.charAt(1), 16);
 			int e = (c * 16) + d;
 
-			builder.setCharAt(i, (char) e);
+			subbedBytes[i] = (byte) e;
 		}
 
+		System.out.print("After byte sub : ");
+		printByteArray(subbedBytes);
+
 		// Add round coefficient
-		byte[] output = builder.toString().getBytes();
+		byte[] output = subbedBytes;
 
 
 		output[0] = (byte) ((output[0] ^ roundCoefficients[index - 1]) % 128);
 
+		System.out.print("After roundcon : ");
+		printByteArray(output);
+
+		System.out.println();
 		return new String(output);
 	}
 
@@ -736,69 +785,19 @@ public class AESMethods2
 		}
 	}
 
-	public static void main(String[] args)
+	public static void printByteAsHex(byte b)
 	{
-		// Unit test for keyAddition()
-		System.out.println("Unit Test: keyAddition()");
+		StringBuilder sb = new StringBuilder();
+		sb.append(String.format("%02X ", b));
+		System.out.print(sb.toString());
+	}
 
-		String text = "0000000000000000"; // '0' = 48 base 10 = 00110000 base 2
-		String key  = "aaaaaaaaaaaaaaaa"; // 'a' = 97 base 10 = 01100001 base 2
-										  // ------------------- GF(2) Addition
-										  // 'Q' = 81 base 10 = 01010001 base 2
-
-		System.out.println(keyAddition(text, key) + "\n");
-
-		// Unit test for byteSubstitution
-		System.out.println("Unit Test: byteSubstitution()");
-		text = "PPPPPPPPPPPPPPPP";		// 'P' = 80 base 10 = 50 base 16
-										// ------------------- byteSubstitution
-										// 'S' = 83 base 10 = 53 base 16
-
-		System.out.println(byteSubstitution(text) + "\n");
-
-		// Unit test for shiftRows()
-		System.out.println("Unit Test: shiftRows()");
-
-		text = "ABCDEFGHIJKLMNOP";		// ABCDEFGHIJKLMNOP
-										// -------------------------- ShiftRows
-										// AFKPEJODINCHMBGL
-
-		System.out.println(shiftRows(text) + "\n");
-
-		// Unit test for mixColumns()	//
-		System.out.println("Unit Test: mixColumns()");
-
-		System.out.print("\nUnit Test Case      : ");
-		char[] chars = new char[16];
-		for(int i = 0; i < 16; i++)
+	public static void printByteArray(byte[] bytes)
+	{
+		for(int i = 0; i < bytes.length; i++)
 		{
-			chars[i] = 25;
-			System.out.print(chars[i]);
+			printByteAsHex(bytes[i]);
 		}
-		System.out.println();
-
-		String output = mixColumns(new String(chars));
-
-		System.out.print("\nOutput as bytes     : ");
-
-		for(int i = 0; i < 16; i++)
-		{
-			System.out.print((byte) output.charAt(i));
-		}
-		System.out.println();
-
-		// Unit test for addStrings()
-		System.out.println("\n" + addStrings("0000", "aaaa")); // Should print QQQQ
-
-		// Unit test for keySchedule()
-		byte[] inBytes = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-		String inString = new String(inBytes);
-		String outString = keySchedule(inString, 2);
-		byte[] outBytes = outString.getBytes();
-
-		System.out.println();
-		for(int i = 0; i < outBytes.length; i++)
-			System.out.print(outBytes[i] + " ");
 		System.out.println();
 	}
 }
